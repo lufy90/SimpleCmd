@@ -6,16 +6,60 @@ import sys
 import os
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt
 from rich.markdown import Markdown
 from dotenv import load_dotenv
+from prompt_toolkit import prompt as pt_prompt
+from prompt_toolkit.shortcuts import confirm
+from prompt_toolkit.styles import Style
 from ai_agent import AIAgent
 from command_executor import CommandExecutor
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
 console = Console()
+
+
+def get_user_input(prompt_text: str = "") -> str:
+    """
+    Get user input with cursor movement support using prompt_toolkit
+    
+    Args:
+        prompt_text: Optional prompt text to display
+        
+    Returns:
+        User input string
+    """
+    try:
+        # Use prompt_toolkit for input with full cursor support
+        user_input = pt_prompt(
+            prompt_text,
+            style=Style.from_dict({
+                'prompt': 'bold cyan',
+            })
+        )
+        return user_input.strip() if user_input else ""
+    except (KeyboardInterrupt, EOFError):
+        return ""
+
+
+def get_confirmation(prompt_text: str, default: bool = False) -> bool:
+    """
+    Get user confirmation with cursor movement support.
+    Note: default is kept for API compatibility; prompt_toolkit confirm has no default param.
+
+    Args:
+        prompt_text: Prompt text to display
+        default: Reserved for API compatibility (not used by underlying library)
+
+    Returns:
+        True if user confirms, False otherwise
+    """
+    try:
+        # prompt_toolkit confirm() only accepts message and suffix, no default param
+        return confirm(message=prompt_text, suffix="")
+    except (KeyboardInterrupt, EOFError):
+        return False
 
 
 def print_welcome():
@@ -85,8 +129,9 @@ def main():
     # Main loop
     while True:
         try:
-            # Get user input
-            user_input = Prompt.ask("\n[bold cyan]You[/bold cyan]").strip()
+            # Get user input with cursor support
+            console.print("\n[bold cyan]You[/bold cyan]", end="")
+            user_input = get_user_input(": ")
             
             if not user_input:
                 continue
@@ -141,13 +186,10 @@ def main():
             # Determine if approval is needed based on API
             if needs_approval:
                 # Command requires approval, ask user
-                should_execute = Prompt.ask(
-                    "\n[red bold]⚠️  This is a dangerous command, continue execution?[/red bold]",
-                    choices=["y", "n", "yes", "no"],
-                    default="n"
-                )
+                console.print("\n[red bold]⚠️  This is a dangerous command, continue execution?[/red bold]")
+                should_execute = get_confirmation("(y/n): ", default=False)
                 
-                if should_execute.lower() in ['y', 'yes']:
+                if should_execute:
                     # Execute command
                     success, stdout, stderr = executor.execute_command(ai_response, auto_approve=True)
                 else:

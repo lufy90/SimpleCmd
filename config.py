@@ -45,10 +45,10 @@ AI_API_KEY = os.getenv('AI_API_KEY', '')
 AI_MODEL = os.getenv('AI_MODEL', 'doubao-seed-1-6-251015')
 
 # API request timeout (seconds)
-API_TIMEOUT = int(os.getenv('API_TIMEOUT', '30'))
+API_TIMEOUT = int(os.getenv('API_TIMEOUT', '90'))
 
 # Command execution timeout (seconds)
-COMMAND_TIMEOUT = 30
+COMMAND_TIMEOUT = 90
 
 # Whether to run in debug mode (show more debug information)
 DEBUG_MODE = os.getenv('DEBUG', 'false').lower() == 'true'
